@@ -29,7 +29,7 @@ import { Context } from "./context.ts";
 import { Status } from "./deps.ts";
 import httpError from "./httpError.ts";
 import { Middleware, compose } from "./middleware.ts";
-import { Key, pathToRegExp } from "./pathToRegExp.ts";
+import { Key, Path, pathToRegExp } from "./pathToRegExp.ts";
 import { HTTPMethods } from "./types.ts";
 import { decodeComponent } from "./util.ts";
 
@@ -105,7 +105,7 @@ class Layer {
   stack: RouterMiddleware[];
 
   constructor(
-    public path: string,
+    public path: string | RegExp,
     public methods: HTTPMethods[],
     middleware: RouterMiddleware | RouterMiddleware[],
     public options: LayerOptions = {}
@@ -145,7 +145,7 @@ class Layer {
 
   setPrefix(prefix: string): this {
     if (this.path) {
-      this.path = `${prefix}${this.path}`;
+      this.path = this.path instanceof RegExp ? new RegExp(`${prefix}${this.path.source}`, this.path.flags) : `${prefix}${this.path}`;
       this.paramNames = [];
       this.regexp = pathToRegExp(this.path, this.paramNames, this.options);
     }
@@ -164,7 +164,7 @@ export class Router {
   private _prefix = "";
 
   private _addRoute(
-    path: string | string[],
+    path: Path,
     middleware: RouterMiddleware[],
     ...methods: HTTPMethods[]
   ): this {
@@ -214,7 +214,7 @@ export class Router {
    * `POST`, or `PUT` method is requested
    */
   all<P extends RouteParams = RouteParams>(
-    route: string | string[],
+    route: Path,
     ...middleware: RouterMiddleware<P>[]
   ): this {
     return this._addRoute(
@@ -291,7 +291,7 @@ export class Router {
    * requested.
    */
   delete<P extends RouteParams = RouteParams>(
-    route: string | string[],
+    route: Path,
     ...middleware: RouterMiddleware<P>[]
   ): this {
     return this._addRoute(route, middleware as RouterMiddleware[], "DELETE");
@@ -301,7 +301,7 @@ export class Router {
    * requested.
    */
   get<P extends RouteParams = RouteParams>(
-    route: string | string[],
+    route: Path,
     ...middleware: RouterMiddleware<P>[]
   ): this {
     return this._addRoute(route, middleware as RouterMiddleware[], "GET");
@@ -311,7 +311,7 @@ export class Router {
    * requested.
    */
   head<P extends RouteParams = RouteParams>(
-    route: string | string[],
+    route: Path,
     ...middleware: RouterMiddleware<P>[]
   ): this {
     return this._addRoute(route, middleware as RouterMiddleware[], "HEAD");
@@ -321,7 +321,7 @@ export class Router {
    * requested.
    */
   options<P extends RouteParams = RouteParams>(
-    route: string | string[],
+    route: Path,
     ...middleware: RouterMiddleware<P>[]
   ): this {
     return this._addRoute(route, middleware as RouterMiddleware[], "OPTIONS");
@@ -331,7 +331,7 @@ export class Router {
    * requested.
    */
   patch<P extends RouteParams = RouteParams>(
-    route: string | string[],
+    route: Path,
     ...middleware: RouterMiddleware<P>[]
   ): this {
     return this._addRoute(route, middleware as RouterMiddleware[], "PATCH");
@@ -341,7 +341,7 @@ export class Router {
    * requested.
    */
   post<P extends RouteParams = RouteParams>(
-    route: string | string[],
+    route: Path,
     ...middleware: RouterMiddleware<P>[]
   ): this {
     return this._addRoute(route, middleware as RouterMiddleware[], "POST");
@@ -351,7 +351,7 @@ export class Router {
    * requested.
    */
   put<P extends RouteParams = RouteParams>(
-    route: string | string[],
+    route: Path,
     ...middleware: RouterMiddleware<P>[]
   ): this {
     return this._addRoute(route, middleware as RouterMiddleware[], "PUT");

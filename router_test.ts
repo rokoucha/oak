@@ -380,3 +380,16 @@ test(async function matchPrefix() {
   await mw(context, next);
   assertEquals(callStack, [0]);
 });
+
+test(async function matchRegexp() {
+  const { context, next } = setup("/route", "GET");
+
+  const callStack: number[] = [];
+  const router = new Router();
+  router.get(new RegExp(/^\/route(?:\/)?$/, "i"), () => {
+    callStack.push(0);
+  });
+  const mw = router.routes();
+  await mw(context, next);
+  assertEquals(callStack, [0]);
+});
